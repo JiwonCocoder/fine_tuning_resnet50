@@ -1,0 +1,8 @@
+saved_models/
+assets/
+checkpoint/
+data/
+log/
+pretrained_model/
+results/
+
