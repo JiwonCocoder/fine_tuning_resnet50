@@ -1,3 +1,4 @@
+#legacy. not used
 #import needed library
 import os
 import logging
@@ -16,7 +17,6 @@ from train_utils import TBLog, get_SGD, get_cosine_schedule_with_warmup
 from models.fixmatch import FixMatch
 from datasets.ssl_dataset import SSL_Dataset_MLCC, SSL_Dataset_CIFAR
 from datasets.data_utils import get_data_loader
-
 
 
 def main(args):

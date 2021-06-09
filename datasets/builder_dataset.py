@@ -1,8 +1,11 @@
 from .ssl_dataset import SSL_Dataset
+from .dataset import BasicDataset
 from .data_utils import get_data_loader
+from .transforms import get_transform
+import torchvision
 
 def build_dataset(args):
-    if args.learning_type:
+    if args.learning_type =='semi':
         #Construct Dataset
         train_dset = SSL_Dataset(name=args.dataset, learning_type=args.learning_type, train=True,
                                  num_classes=args.num_classes, data_dir=args.data_dir)
@@ -15,6 +18,16 @@ def build_dataset(args):
         loader_dict = {}
         dset_dict = {'train_lb': lb_dset, 'train_ulb': ulb_dset, 'eval': eval_dset}
 
+    elif args.learning_type =='sup':
+        if hasattr(torchvision.datasets, args.dataset.upper()):
+            dset = getattr(torchvision.datasets, args.dataset.upper())
+            train_dset = dset(args.data_dir, train=True, download=True, transform=transform_train)
+            eval_dset = dset(args.data_dir, train=False, download=True, transform=transform_test)
+        else:
+            train_dset = torchvision.datasets.ImageFolder(root=args.data_dir+'/Train', transform=get_transform(args.dataset, args.learning_type, train=True))
+            eval_dset = torchvision.datasets.ImageFolder(root=args.data_dir+'/Test', transform=get_transform(args.dataset, args.learning_type, train=False))
+
+        dset_dict = {'train': train_dset, 'eval': eval_dset}
     # else:
     #     dset_dict = {'train:', 'eval:'}
 
@@ -43,7 +56,7 @@ def build_dataloader(args, dset_dict):
 
 
     elif args.learning_type =='sup':
-        loader_dict['train_lb'] = get_data_loader(dset_dict['train'],
+        loader_dict['train'] = get_data_loader(dset_dict['train'],
                                                   args.batch_size,
                                                   num_workers=args.num_workers
                                                   )

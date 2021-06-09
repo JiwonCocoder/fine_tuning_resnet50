@@ -14,8 +14,7 @@ from .fixmatch_utils import consistency_loss, Get_Scalar
 from train_utils import ce_loss
 from .choose_network import choose_network
 
-
-class FixMatch:
+class SupervisedModel:
     def __init__(self, args, num_classes, ema_m, T, p_cutoff, lambda_u, \
                  hard_label=True, t_fn=None, p_fn=None, it=0, num_eval_iter=1000, tb_log=None, logger=None):
         """
@@ -34,7 +33,7 @@ class FixMatch:
             logger: logger (see utils_from_git.py)
         """
         
-        super(FixMatch, self).__init__()
+        super(SupervisedModel, self).__init__()
 
         # momentum update param
         self.loader = {}
@@ -46,8 +45,8 @@ class FixMatch:
         # other configs are covered in main.py
         # self.train_model_1 = models.resnet50(pretrained=False)
         # self.eval_model_1 = models.resnet50(pretrained=False)
-        self.train_model = choose_network(args.net_from)
-        self.eval_model = choose_network(args.net)
+        self.train_model = choose_network(args)
+        self.eval_model = choose_network(args)
         self.num_eval_iter = num_eval_iter
         self.t_fn = Get_Scalar(T) #temperature params function
         self.p_fn = Get_Scalar(p_cutoff) #confidence cutoff function
@@ -116,7 +115,90 @@ class FixMatch:
         
         scaler = GradScaler()
         amp_cm = autocast if args.amp else contextlib.nullcontext
+        ##################################################################
+        for (x_lb, y_lb) in self.loader_dict['train']:
+            if self.it > args.num_train_iter:
+                break
+            end_batch.record()
+            torch.cuda.synchronize()
+            start_run.record()
 
+            num_lb = x_lb.shape[0]
+            
+            x_lb = x_lb.cuda(args.gpu)
+            y_lb = y_lb.cuda(args.gpu)
+
+            inputs = x_lb
+
+            with amp_cm():
+                logits = self.train_model(inputs)
+                logits_x_lb = logits[:num_lb]
+                del logits
+                # hyper-params for update
+                T = self.t_fn(self.it)
+                p_cutoff = self.p_fn(self.it)
+
+                sup_loss = ce_loss(logits_x_lb, y_lb, reduction='mean')
+
+            # parameter updates
+            if args.amp:
+                scaler.scale(sup_loss).backward()
+                scaler.step(self.optimizer)
+                scaler.update()
+            else:
+                sup_loss.backward()
+                self.optimizer.step()
+                
+            self.scheduler.step()
+            self.train_model.zero_grad()
+            
+            with torch.no_grad():
+                self._eval_model_update()
+            
+            end_run.record()
+            torch.cuda.synchronize()
+
+
+            #tensorboard_dict update
+            tb_dict = {}
+            tb_dict['train/sup_loss'] = sup_loss.detach()  
+            tb_dict['lr'] = self.optimizer.param_groups[0]['lr']
+            tb_dict['train/prefecth_time'] = start_batch.elapsed_time(end_batch)/1000.
+            tb_dict['train/run_time'] = start_run.elapsed_time(end_run)/1000.
+            
+            if self.it % self.num_eval_iter == 0:
+                eval_dict = self.evaluate(args=args)
+                tb_dict.update(eval_dict)
+                
+                save_path = os.path.join(args.save_dir, args.save_name)
+                
+                if tb_dict['eval/top-1-acc'] > best_eval_acc:
+                    best_eval_acc = tb_dict['eval/top-1-acc']
+                    best_it = self.it
+                
+                self.print_fn(f"{self.it} iteration, USE_EMA: {hasattr(self, 'eval_model')}, {tb_dict}, BEST_EVAL_ACC: {best_eval_acc}, at {best_it} iters")
+            
+            if not args.multiprocessing_distributed or \
+                    (args.multiprocessing_distributed and args.rank % ngpus_per_node == 0):
+                
+                if self.it == best_it:
+                    self.save_model('model_best.pth', save_path)
+                
+                if not self.tb_log is None:
+                    self.tb_log.update(tb_dict, self.it)
+                
+            self.it +=1
+            del tb_dict
+            start_batch.record()
+            if self.it > 2**19:
+                self.num_eval_iter = 1000
+        
+        eval_dict = self.evaluate(args=args)
+        eval_dict.update({'eval/best_acc': best_eval_acc, 'eval/best_it': best_it})
+        return eval_dict
+            
+        ##################################################################
+        """
         for (x_lb, y_lb), (x_ulb_w, x_ulb_s, _) in zip(self.loader_dict['train_lb'], self.loader_dict['train_ulb']):
             # print("x_lb")
             # print(x_lb)
@@ -218,7 +300,7 @@ class FixMatch:
         eval_dict = self.evaluate(args=args)
         eval_dict.update({'eval/best_acc': best_eval_acc, 'eval/best_it': best_it})
         return eval_dict
-            
+        """
             
     @torch.no_grad()
     def evaluate(self, eval_loader=None, args=None):
