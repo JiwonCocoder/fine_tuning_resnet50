@@ -267,7 +267,7 @@ if __name__ == "__main__":
     Backbone Net Configurations
     '''
     parser.add_argument('--learning_type', type=str, default=None, help='semi|sup')
-    parser.add_argument('--baseline', type=str, default=None, help='Fixmatch')
+    parser.add_argument('--baseline', type=str, default=None, help='Fixmatch|KD_distitll')
     parser.add_argument('--net', type=str, default='WideResNet')
     parser.add_argument('--net_from_name', type=bool, default=False)
     parser.add_argument('--depth', type=int, default=28)
@@ -284,6 +284,14 @@ if __name__ == "__main__":
                         help='scratch | ImageNet_supervised | ImageNet_SimCLR | CIFAR_SimCLR | MLCC_SimCLR')
     parser.add_argument('--fine_tuning', type=str, default=None,
                         help='supervised | semi_supervised')
+    parser.add_argument('--teacher_net', type=str, default=None,
+                        help='resnet50_ImageNet_supervied '
+                             'resnet50_SimCLR'
+                             'resnet50_CIFAR_SimCLR'
+                             'resnet50_MLCC_SimCLR'
+                        )
+    parser.add_argument('--student_net', type=str, default=None,
+                        help='ressnet50')
     '''
     Data Configurations
     '''

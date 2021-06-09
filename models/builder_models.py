@@ -2,7 +2,7 @@ import torch.nn as nn
 import os
 import torch
 from .fixmatch import FixMatch
-
+from .kd_distill import KD_distill
 
 def build_model(args, tb_log, logger):
     if args.baseline == 'Fixmatch':
@@ -17,3 +17,10 @@ def build_model(args, tb_log, logger):
                      tb_log=tb_log,
                      logger=logger)
         return model
+    elif args.baseline == 'KD_distill':
+        model = KD_distill(args,
+                           num_classes,
+                           tb_log = tb_log,
+                           logger=logger)
+        return model
+        
