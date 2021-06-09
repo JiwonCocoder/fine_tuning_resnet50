@@ -1,4 +1,9 @@
-def choose_network(net_from_name, net, pretrained_from):
+import torch.nn as nn
+
+def choose_network(net_from_name, 
+                   net,
+                   pretrained_from='scratch',
+                   pretrained_model_dir='./pretrained_models'):
     # generating models from torchvision.models
     if net_from_name:
         import torchvision.models as models

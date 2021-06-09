@@ -284,14 +284,19 @@ if __name__ == "__main__":
                         help='pretrained_model_dir')
     parser.add_argument('--fine_tuning', type=str, default=None,
                         help='supervised | semi_supervised')
+    '''
+    for KD_distillation
+    '''
     parser.add_argument('--teacher_net', type=str, default=None,
-                        help='resnet50_ImageNet_supervied '
-                             'resnet50_SimCLR'
-                             'resnet50_CIFAR_SimCLR'
-                             'resnet50_MLCC_SimCLR'
+                        help='resnet50'
                         )
     parser.add_argument('--student_net', type=str, default=None,
-                        help='ressnet50')
+                        help='resnet50')
+    parser.add_argument('--alpha', default=None, type=float,
+                        help="loss_kd")
+    parser.add_argument('--temperature', default=None, type=float,
+                        help="loss_kd")
+
     '''
     Data Configurations
     '''

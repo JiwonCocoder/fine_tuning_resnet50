@@ -1,5 +1,4 @@
 import pdb
-from utils import define_model
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -46,8 +45,8 @@ class FixMatch:
         # other configs are covered in main.py
         # self.train_model_1 = models.resnet50(pretrained=False)
         # self.eval_model_1 = models.resnet50(pretrained=False)
-        self.train_model = choose_network(args.net_from)
-        self.eval_model = choose_network(args.net)
+        self.train_model = choose_network(args.net_from_name, args.studnet_net, args.pretrained_from)
+        self.eval_model = choose_network(args.net_from_name, args.net, args.pretrained_from)
         self.num_eval_iter = num_eval_iter
         self.t_fn = Get_Scalar(T) #temperature params function
         self.p_fn = Get_Scalar(p_cutoff) #confidence cutoff function

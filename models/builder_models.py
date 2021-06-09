@@ -19,7 +19,7 @@ def build_model(args, tb_log, logger):
                      logger=logger)
     elif args.baseline == 'KD_distill':
         model = KD_distill(args,
-                           num_classes,
+                           args.num_classes,
                            tb_log = tb_log,
                            logger=logger)
 

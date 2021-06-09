@@ -1,5 +1,4 @@
 import pdb
-from utils import define_model
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,8 +13,46 @@ from .fixmatch_utils import consistency_loss, Get_Scalar
 from train_utils import ce_loss
 from tqdm import tqdm
 from .choose_network import choose_network
+from torch.autograd import Variable
 
 
+class RunningAverage():
+    """A simple class that maintains the running average of a quantity
+
+    Example:
+    ```
+    loss_avg = RunningAverage()
+    loss_avg.update(2)
+    loss_avg.update(4)
+    loss_avg() = 3
+    ```
+    """
+
+    def __init__(self):
+        self.steps = 0
+        self.total = 0
+
+    def update(self, val):
+        self.total += val
+        self.steps += 1
+
+    def __call__(self):
+        return self.total / float(self.steps)
+def loss_fn_kd(outputs, labels, teacher_outputs, args):
+    """
+    Compute the knowledge-distillation (KD) loss given outputs, labels.
+    "Hyperparameters": temperature and alpha
+
+    NOTE: the KL Divergence for PyTorch comparing the softmaxs of teacher
+    and student expects the input tensor to be log probabilities! See Issue #2
+    """
+    alpha = args.alpha
+    T = args.temperature
+    KD_loss = nn.KLDivLoss(reduction='batchmean')(F.log_softmax(outputs/T, dim=1),
+                             F.softmax(teacher_outputs/T, dim=1)) * (alpha * T * T) + \
+              F.cross_entropy(outputs, labels) * (1. - alpha)
+
+    return KD_loss
 
 class KD_distill:
     def __init__(self, args, num_classes, tb_log=None, logger=None):
@@ -40,15 +77,14 @@ class KD_distill:
         # momentum update param
         self.loader = {}
         self.num_classes = num_classes
-        self.ema_m = ema_m
-
+        #(future_work)
+        self.ema_m = 0.9
         # create the encoders
         # network is builded only by num_classes,
         
-        self.teacher_model = choose_network(args)
-        self.student_model = choose_network(args)
-        self.eval_model = choose_network(args)
-        self.num_eval_iter = num_eval_ite
+        self.teacher_model = choose_network(args.net_from_name, args.student_net)
+        self.train_model = choose_network(args.net_from_name, args.student_net, args.pretrained_from, args.pretrained_model_dir)
+        self.eval_model = choose_network(args.net_from_name, args.student_net)
         self.tb_log = tb_log
 
         self.optimizer = None
@@ -93,8 +129,12 @@ class KD_distill:
         ngpus_per_node = torch.cuda.device_count()
 
         # lb: labeled, ulb: unlabeled
-        self.train_model.train()
+        
+        #teacher_model:freeze, train_model:training
+        self.teacher_model.cuda(args.gpu)
 
+        self.train_model.train()
+        self.teacher_model.eval()
         # for gpu profiling
         start_batch = torch.cuda.Event(enable_timing=True)
         end_batch = torch.cuda.Event(enable_timing=True)
@@ -106,71 +146,48 @@ class KD_distill:
 
         scaler = GradScaler()
         amp_cm = autocast if args.amp else contextlib.nullcontext
-        with tqdm(total=len(self.loader_dict['train_loader'])) as t:
-            for idx,
-        for (x_lb, y_lb), (x_ulb_w, x_ulb_s, _) in zip(self.loader_dict['train_lb'], self.loader_dict['train_ulb']):
-            # print("x_lb")
-            # print(x_lb)
 
-            # prevent the training iterations exceed args.num_train_iter
-            if self.it > args.num_train_iter:
-                break
+        loss_avg = RunningAverage()
 
-            end_batch.record()
-            torch.cuda.synchronize()
-            start_run.record()
 
-            num_lb = x_lb.shape[0]
-            num_ulb = x_ulb_w.shape[0]
-            assert num_ulb == x_ulb_s.shape[0]
+        with tqdm(total=len(self.loader_dict['train'])) as t:
+            #i is sample_id per minibatch
+            for i, (x_lb, y_lb) in enumerate(self.loader_dict['train']):
+                if args.gpu is not None:
+                    x_lb, y_lb = x_lb.cuda(), y_lb.cuda()
+                #convert to torch variables
+                x_lb, y_lb = Variable(x_lb), Variable(y_lb)
+                output_batch = self.train_model(x_lb)
+                with torch.no_grad():
+                    output_teacher_batch = self.teacher_model(x_lb)
+                if args.gpu:
+                    output_teacher_batch = output_teacher_batch.cuda()
+                total_loss = loss_fn_kd(output_batch, y_lb, output_teacher_batch, args)
 
-            x_lb, x_ulb_w, x_ulb_s = x_lb.cuda(args.gpu), x_ulb_w.cuda(args.gpu), x_ulb_s.cuda(args.gpu)
+                # parameter updates
+                if args.amp:
+                    scaler.scale(total_loss).backward()
+                    scaler.step(self.optimizer)
+                    scaler.update()
+                else:
+                    total_loss.backward()
+                    self.optimizer.step()
 
-            y_lb = y_lb.cuda(args.gpu)
+                self.scheduler.step()
+                self.train_model.zero_grad()
 
-            inputs = torch.cat((x_lb, x_ulb_w, x_ulb_s))
-
-            # inference and calculate sup/unsup losses
-            with amp_cm():
-                logits = self.train_model(inputs)
-                logits_x_lb = logits[:num_lb]
-                logits_x_ulb_w, logits_x_ulb_s = logits[num_lb:].chunk(2)
-                del logits
-
-                # hyper-params for update
-                T = self.t_fn(self.it)
-                p_cutoff = self.p_fn(self.it)
-
-                sup_loss = ce_loss(logits_x_lb, y_lb, reduction='mean')
-                unsup_loss, mask = consistency_loss(logits_x_ulb_w,
-                                                    logits_x_ulb_s,
-                                                    'ce', T, p_cutoff,
-                                                    use_hard_labels=args.hard_label)
-                # pdb.set_trace()
-                total_loss = sup_loss + self.lambda_u * unsup_loss
-
-            # parameter updates
-            if args.amp:
-                scaler.scale(total_loss).backward()
-                scaler.step(self.optimizer)
-                scaler.update()
-            else:
-                total_loss.backward()
-                self.optimizer.step()
-
-            self.scheduler.step()
-            self.train_model.zero_grad()
-
-            with torch.no_grad():
-                self._eval_model_update()
+                with torch.no_grad():
+                    self._eval_model_update()
+                # update the average loss
+                loss_avg.update(total_loss.data)
+                t.set_postfix(loss='{:05.3f}'.format(loss_avg()))
+                t.update()
 
             end_run.record()
             torch.cuda.synchronize()
 
             # tensorboard_dict update
             tb_dict = {}
-            tb_dict['train/sup_loss'] = sup_loss.detach()
-            tb_dict['train/unsup_loss'] = unsup_loss.detach()
             tb_dict['train/total_loss'] = total_loss.detach()
             tb_dict['train/mask_ratio'] = 1.0 - mask.detach()
             tb_dict['lr'] = self.optimizer.param_groups[0]['lr']

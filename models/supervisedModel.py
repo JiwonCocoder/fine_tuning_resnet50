@@ -1,5 +1,4 @@
 import pdb
-from utils import define_model
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
