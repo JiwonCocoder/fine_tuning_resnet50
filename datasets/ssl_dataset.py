@@ -105,7 +105,7 @@ class SSL_Dataset:
             dset = getattr(torchvision.datasets, self.name.upper())
             dset = dset(self.data_dir, train=self.train, download=True)
             data, targets = dset.data, dset.targets
-        else:
+        else: # 토치비전에 데이터셋이 없을 때 
             print("dataset from data_folder")
             if self.train == True:
                 print("Train")
@@ -154,6 +154,26 @@ class SSL_Dataset:
         transform = self.transform
         data_dir = self.data_dir
         
+        return BasicDataset(data, targets, num_classes, transform, 
+                            use_strong_transform, strong_transform, onehot)
+
+    def get_sup_set(self, use_strong_transform=False, 
+                 strong_transform=None, onehot=False, train=True, train_idx = 1):
+        print("get_dset_params:", use_strong_transform, strong_transform, onehot)
+        data, targets = self.get_data()
+        num_classes = self.num_classes
+        transform = self.transform
+        data_dir = self.data_dir
+
+        if hasattr(torchvision.datasets, self.name.upper()):
+            dset = getattr(torchvision.datasets, self.name.upper())
+            dset = dset(self.data_dir, train=self.train, download=True)
+            data, targets = dset.data, dset.targets
+        else: 
+            
+            trainset = torchvision.datasets.ImageFolder(root="./Train", transform=transform_train)
+            testset = torchvision.datasets.ImageFolder(root="./Test", transform=transform_test)
+            
         return BasicDataset(data, targets, num_classes, transform, 
                             use_strong_transform, strong_transform, onehot)
     

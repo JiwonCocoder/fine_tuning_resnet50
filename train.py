@@ -267,7 +267,7 @@ if __name__ == "__main__":
     Backbone Net Configurations
     '''
     parser.add_argument('--learning_type', type=str, default=None, help='semi|sup')
-    parser.add_argument('--baseline', type=str, default=None, help='Fixmatch')
+    parser.add_argument('--baseline', type=str, default=None, help='Fixmatch|supervised')
     parser.add_argument('--net', type=str, default='WideResNet')
     parser.add_argument('--net_from_name', type=bool, default=False)
     parser.add_argument('--depth', type=int, default=28)
