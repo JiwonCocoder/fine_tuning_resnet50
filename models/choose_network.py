@@ -1,4 +1,5 @@
 import torch.nn as nn
+import pdb
 
 def choose_network(net_from_name, 
                    net,
@@ -10,16 +11,20 @@ def choose_network(net_from_name,
         model_name_list = sorted(name for name in models.__dict__
                                  if name.islower() and not name.startswith("__")
                                  and callable(models.__dict__[name]))
-        if net not in model_name_list:
+        if net not in model_name_list: #토치비전에 모델 없으면 에러
             assert Exception(f"[!] Networks\' Name is wrong, check net config, \
                                expected: {model_name_list}  \
                                received: {net}")
         else:
+            # model = models.__dict__['wide_resnet50_2'](pretrained=True)
+            # model.fc = nn.Linear(model.fc.in_features, 10)
+            # return model
+
             net_model = models.__dict__[net]
+            print(net_model.__name__+" is used")
             if pretrained_from == 'scratch':
                 model = net_model(pretrained=False, num_classes=10)
                 model.fc = nn.Linear(model.fc.in_features, 10)
-
             elif pretrained_from == 'ImageNet_supervised':
                 model = net_model(pretrained=True)
                 model.fc = nn.Linear(model.fc.in_features, 10)
@@ -42,3 +47,9 @@ def choose_network(net_from_name,
                 log = model.load_state_dict(state_dict, strict=False)
                 assert log.missing_keys == ['fc.weight', 'fc.bias']
             return model
+    else: # if net_from_name == false 인 경우
+        # 여기도 if 문으로 프리트레인 조건 넣어줘야함. 그러나 net from name 을 항상 true 로 두면 그럴 필요 없음
+        model = models.__dict__['wide_resnet50_2'](pretrained=True)
+        model.fc = nn.Linear(model.fc.in_features, 10)
+        return model
+

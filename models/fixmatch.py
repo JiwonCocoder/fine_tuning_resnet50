@@ -45,9 +45,9 @@ class FixMatch:
         # other configs are covered in main.py
         # self.train_model_1 = models.resnet50(pretrained=False)
         # self.eval_model_1 = models.resnet50(pretrained=False)
-        self.train_model = choose_network(args.net_from_name, args.studnet_net, args.pretrained_from)
-        self.eval_model = choose_network(args.net_from_name, args.net, args.pretrained_from)
-        self.num_eval_iter = num_eval_iter
+        self.train_model = choose_network(args.net_from_name, args.net, args.pretrained_from, args.pretrained_model_dir)
+        self.eval_model = choose_network(args.net_from_name, args.net, args.pretrained_from, args.pretrained_model_dir)
+        self.num_eval_iter = num_eval_iter 
         self.t_fn = Get_Scalar(T) #temperature params function
         self.p_fn = Get_Scalar(p_cutoff) #confidence cutoff function
         self.lambda_u = lambda_u
