@@ -2,7 +2,7 @@ import torch.nn as nn
 import os
 import torch
 from .fixmatch import FixMatch
-from .kd_distill import KD_distill
+from .kd_distill import KD_distill_semi
 from .supervisedModel import SupervisedModel
 
 def build_model(args, tb_log, logger):
@@ -18,7 +18,7 @@ def build_model(args, tb_log, logger):
                      tb_log=tb_log,
                      logger=logger)
     elif args.baseline == 'KD_distill':
-        model = KD_distill(args,
+        model = KD_distill_semi(args,
                            args.num_classes,
                            tb_log = tb_log,
                            logger=logger)

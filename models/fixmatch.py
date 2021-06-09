@@ -56,7 +56,6 @@ class FixMatch:
         
         self.optimizer = None
         self.scheduler = None
-        
         self.it = 0
         
         self.logger = logger

@@ -7,8 +7,12 @@
 
 #for KD
 rm -r ./saved_models
-python train.py --world-size 1 --rank 0 --save_name KD --data_dir ./data  --dataset cifar10 --num_classes 10 --lr 0.0002 --net_from_name True --eval_batch_size 10 --gpu 0\
- --pretrained_from scratch --pretrained_model_dir pretrained_model --learning_type sup --baseline KD_distill --teacher_net resnet50 --student_net resnet50 --temperature 0.1 --alpha 0.35
+#python train.py --batch_size 128 --world-size 1 --rank 0 --save_name KD --data_dir ./data  --dataset cifar10 --num_classes 10 --lr 0.0002 --net_from_name True --eval_batch_size 10 --gpu 0\
+# --pretrained_from scratch --pretrained_model_dir pretrained_model --learning_type semi --baseline KD_distill --teacher_net resnet50 --student_net resnet50 --temperature 0.1 --alpha 0.35
+
+
+python train.py --batch_size 128 --world-size 1 --rank 0 --save_name sup --data_dir ./data  --dataset cifar10 --num_classes 10 --lr 0.0002 --net resnet50 --net_from_name True --eval_batch_size 10 --gpu 0\
+ --pretrained_from scratch --pretrained_model_dir pretrained_model --learning_type sup --baseline supervised
 
 #python train.py --world-size 1 --rank 0 --num_labels 300 --save_name scratch_300_0002 --data_dir /data/samsung  --dataset MLCC --num_classes 10 --lr 0.0002 --net resnet50 --net_from_name True --eval_batch_size 10 --gpu 0\
 # --pretrained_from scratch --pretrained_model_dir pretrained_model --learning_type semi --baseline Fixmatch
