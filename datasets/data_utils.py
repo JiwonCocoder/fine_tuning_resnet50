@@ -30,10 +30,12 @@ def split_ssl_data(data, target, num_labels, num_classes, index=None, include_lb
     index: None 
     '''
     #(cifar)50000, 32, 32, 3
+    print("PDB IN")
+    # pdb.set_trace()
     lb_data, lbs, lb_idx = sample_labeled_data(data, target, num_labels, num_classes, index)
     ulb_idx = np.array(sorted(list(set(range(len(data))) - set(lb_idx)))) #unlabeled_data index of data
     # pdb.set_trace()
-    if include_lb_to_ulb:
+    if include_lb_to_ulb: # 보통 여기로 들어gam
         return lb_data, lbs, data, target
     else:
         return lb_data, lbs, data[ulb_idx], target[ulb_idx]
@@ -50,6 +52,7 @@ def sample_labeled_data(data, target,
     assert num_labels % num_classes == 0
     if not index is None:
         index = np.array(index, dtype=np.int32)
+        pdb.set_trace()
         return data[index], target[index], index
     samples_per_class = int(num_labels / num_classes)
 

@@ -121,12 +121,18 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.5,0.5,0.5),(0.5,0.5,0.5))
 ])
 
-if args.dataset == "CIFAR10" :
-    print("CIFAR10 Dataset\n")
+if args.dataset == "CIFAR10" or args.dataset == "STL10" or args.dataset == "SVHN":
+    print(args.dataset+"dataset\n")
     trainset = datasets.CIFAR10(root='~/data', train=True, download=True, transform=transform_train)
-
     testset = datasets.CIFAR10(root='~/data', train=False, download=True, transform=transform_test)
-    
+elif args.dataset == "STL10":
+    print(args.dataset+"dataset\n")
+    trainset = datasets.STL10(root='~/data', train=True, download=True, transform=transform_train)
+    testset = datasets.STL10(root='~/data', train=False, download=True, transform=transform_test)
+elif args.dataset == "SVHN":
+    print(args.dataset+"dataset\n")
+    trainset = datasets.SVHN(root='~/data', train=True, download=True, transform=transform_train)
+    testset = datasets.SVHN(root='~/data', train=False, download=True, transform=transform_test)
 elif args.dataset == "MLCC" :
     print("MLCC Dataset\n")
     trainset = torchvision.datasets.ImageFolder(root="./sup_set/Train", transform=get_transform_MLCC(train=True))

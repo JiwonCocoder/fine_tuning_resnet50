@@ -20,9 +20,16 @@ def build_dataset(args):
 
     elif args.learning_type =='sup':
         if hasattr(torchvision.datasets, args.dataset.upper()):
-            dset = getattr(torchvision.datasets, args.dataset.upper())
-            train_dset = dset(args.data_dir, train=True, download=True, transform=get_transform(args.dataset, args.learning_type, train=True))
-            eval_dset = dset(args.data_dir, train=False, download=True, transform=get_transform(args.dataset, args.learning_type, train=False))
+            dset = getattr(torchvision.datasets, args.dataset.upper()) #여기
+            
+            if args.dataset =='cifar10':
+                train_dset = dset(args.data_dir, train=True, download=True, transform=get_transform(args.dataset, args.learning_type, train=True))
+                eval_dset = dset(args.data_dir, train=False, download=True, transform=get_transform(args.dataset, args.learning_type, train=False))
+            elif args.dataset == 'STL10' or args.dataset == 'SVHN':
+                train_dset = dset(args.data_dir, split='train', download=True, transform=get_transform(args.dataset, args.learning_type, train=True))
+                eval_dset = dset(args.data_dir, split='test', download=True, transform=get_transform(args.dataset, args.learning_type, train=False))
+            # train_dset = dset(args.data_dir, train=True, download=True, transform=get_transform(args.dataset, args.learning_type, train=True))
+            # eval_dset = dset(args.data_dir, train=False, download=True, transform=get_transform(args.dataset, args.learning_type, train=False))
         else:
             train_dset = torchvision.datasets.ImageFolder(root=args.data_dir+'/Train', transform=get_transform(args.dataset, args.learning_type, train=True))
             eval_dset = torchvision.datasets.ImageFolder(root=args.data_dir+'/Test', transform=get_transform(args.dataset, args.learning_type, train=False))

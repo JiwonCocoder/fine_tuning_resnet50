@@ -103,8 +103,17 @@ class SSL_Dataset:
         """
         if hasattr(torchvision.datasets, self.name.upper()):
             dset = getattr(torchvision.datasets, self.name.upper())
-            dset = dset(self.data_dir, train=self.train, download=True)
-            data, targets = dset.data, dset.targets
+            if self.name=='cifar10':
+                dset = dset(self.data_dir, train=self.train, download=True)
+                data, targets = dset.data, dset.targets
+            elif self.name == 'STL10':
+                dset = dset(self.data_dir, split=('train+unlabeled' if self.train else 'test'), download=True)
+                
+                data, targets = dset.data, dset.labels
+            elif self.name == 'SVHN':
+                dset = dset(self.data_dir, split=('train' if self.train else 'test'), download=True)
+                data, targets = dset.data, dset.labels
+
         else: # 토치비전에 데이터셋이 없을 때 
             print("dataset from data_folder")
             if self.train == True:
@@ -167,9 +176,14 @@ class SSL_Dataset:
 
         if hasattr(torchvision.datasets, self.name.upper()):
             dset = getattr(torchvision.datasets, self.name.upper())
-            dset = dset(self.data_dir, train=self.train, download=True)
+            if self.name=='cifar10':
+                dset = dset(self.data_dir, train=self.train, download=True)
+            elif self.name == 'STL10':
+                dset = dset(self.data_dir, split=('train' if self.train else 'test'), download=True)
+            elif self.name == 'SVHN':
+                dset = dset(self.data_dir, split=('train' if self.train else 'test'), download=True)
             data, targets = dset.data, dset.targets
-        else: 
+        else: #MLCC에 대해
             
             trainset = torchvision.datasets.ImageFolder(root="./Train", transform=transform_train)
             testset = torchvision.datasets.ImageFolder(root="./Test", transform=transform_test)

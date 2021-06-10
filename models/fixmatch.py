@@ -8,6 +8,7 @@ from torch.cuda.amp import autocast, GradScaler
 import os
 import contextlib
 from train_utils import AverageMeter
+import numpy as np
 
 from .fixmatch_utils import consistency_loss, Get_Scalar
 from train_utils import ce_loss
@@ -92,7 +93,30 @@ class FixMatch:
         self.optimizer = optimizer
         self.scheduler = scheduler
     
-    
+    """from github"""
+    # https://github.com/facebookresearch/mixup-cifar10/blob/master/train.py
+    def mixup_data(self, x, y, alpha=1.0, use_cuda=True):
+        '''Returns mixed inputs, pairs of targets, and lambda'''
+        if alpha > 0:
+            lam = np.random.beta(alpha, alpha)
+        else:
+            lam = 1
+
+        batch_size = x.size()[0]
+        if use_cuda:
+            index = torch.randperm(batch_size).cuda()
+        else:
+            index = torch.randperm(batch_size)
+
+        mixed_x = lam * x + (1 - lam) * x[index, :]
+        y_a, y_b = y, y[index]
+        return mixed_x, y_a, y_b, lam
+
+    def mixup_criterion(self, criterion, pred, y_a, y_b, lam):
+        return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+    """up to here"""
+
+
     def train(self, args, logger=None):
         """
         Train function of FixMatch.
@@ -115,10 +139,13 @@ class FixMatch:
         scaler = GradScaler()
         amp_cm = autocast if args.amp else contextlib.nullcontext
 
+        # pdb.set_trace()
         for (x_lb, y_lb), (x_ulb_w, x_ulb_s, _) in zip(self.loader_dict['train_lb'], self.loader_dict['train_ulb']):
-            # print("x_lb")
-            # print(x_lb)
-
+            # HERE_mixup
+            if args.mixup == 1:
+                mixed_x_lb, y_lb_a, y_lb_b, lam = self.mixup_data(x_lb, y_lb)
+                x_lb = mixed_x_lb
+            ## Up to Here
 
             # prevent the training iterations exceed args.num_train_iter
             if self.it > args.num_train_iter:
@@ -133,9 +160,15 @@ class FixMatch:
             assert num_ulb == x_ulb_s.shape[0]
             
             x_lb, x_ulb_w, x_ulb_s = x_lb.cuda(args.gpu), x_ulb_w.cuda(args.gpu), x_ulb_s.cuda(args.gpu)
-
-            y_lb = y_lb.cuda(args.gpu)
             
+            ## HERE_mixup
+            if args.mixup == 1:
+                y_lb_a = y_lb_a.cuda(args.gpu)
+                y_lb_b = y_lb_b.cuda(args.gpu)
+            else:
+                y_lb = y_lb.cuda(args.gpu)
+            ## up to HERE
+
             inputs = torch.cat((x_lb, x_ulb_w, x_ulb_s))
             
             # inference and calculate sup/unsup losses
@@ -149,7 +182,13 @@ class FixMatch:
                 T = self.t_fn(self.it)
                 p_cutoff = self.p_fn(self.it)
 
-                sup_loss = ce_loss(logits_x_lb, y_lb, reduction='mean')
+                ## HERE_mixup
+                if args.mixup == 1:
+                    sup_loss = lam * ce_loss(logits_x_lb, y_lb_a, reduction='mean') + (1 - lam) * ce_loss(logits_x_lb, y_lb_b, reduction='mean')
+                else :
+                    sup_loss = ce_loss(logits_x_lb, y_lb, reduction='mean')
+                ## up to here
+
                 unsup_loss, mask = consistency_loss(logits_x_ulb_w, 
                                               logits_x_ulb_s, 
                                               'ce', T, p_cutoff,

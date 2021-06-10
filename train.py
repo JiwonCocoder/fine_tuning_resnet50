@@ -302,7 +302,7 @@ if __name__ == "__main__":
     '''
 
     parser.add_argument('--data_dir', type=str, default='./data')
-    parser.add_argument('--dataset', type=str, default='cifar10', help='cifar10 | MLCC')
+    parser.add_argument('--dataset', type=str, default='cifar10', help='cifar10 | STL10 | SVHN | MLCC')
     parser.add_argument('--train_sampler', type=str, default='RandomSampler')
     parser.add_argument('--num_classes', type=int, default=10)
     parser.add_argument('--num_workers', type=int, default=1)
@@ -329,6 +329,8 @@ if __name__ == "__main__":
                              'N processes per node, which has N GPUs. This is the '
                              'fastest way to use PyTorch for either single node or '
                              'multi node data parallel training')
+
+    parser.add_argument('--mixup', default=0, type=int, help='wanna mix ? 1 == mixup | 0 == non mixup')
 
     args = parser.parse_args()
     main(args)

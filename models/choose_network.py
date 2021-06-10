@@ -28,7 +28,7 @@ def choose_network(net_from_name,
             elif pretrained_from == 'ImageNet_supervised':
                 model = net_model(pretrained=True)
                 model.fc = nn.Linear(model.fc.in_features, 10)
-            elif "SimCLR" in pretrained_from:
+            elif "SimCLR" in pretrained_from:# CAUTION : 와이드레즈넷일때 따로 추가해줘야함.
                 model = models.resnet50(pretrained=False, num_classes=10)
                 dataset = pretrained_from.split('_')[0]
                 checkpoint_dir = os.path.join(pretrained_model_dir, dataset)
