@@ -103,7 +103,7 @@ class SSL_Dataset:
         """
         if hasattr(torchvision.datasets, self.name.upper()):
             dset = getattr(torchvision.datasets, self.name.upper())
-            if self.name=='cifar10':
+            if self.name=='cifar10' or self.name=='cifar100':
                 dset = dset(self.data_dir, train=self.train, download=True)
                 data, targets = dset.data, dset.targets
             elif self.name == 'STL10':
@@ -166,31 +166,31 @@ class SSL_Dataset:
         return BasicDataset(data, targets, num_classes, transform, 
                             use_strong_transform, strong_transform, onehot)
 
-    def get_sup_set(self, use_strong_transform=False, 
-                 strong_transform=None, onehot=False, train=True, train_idx = 1):
-        print("get_dset_params:", use_strong_transform, strong_transform, onehot)
-        data, targets = self.get_data()
-        num_classes = self.num_classes
-        transform = self.transform
-        data_dir = self.data_dir
-
-        if hasattr(torchvision.datasets, self.name.upper()):
-            dset = getattr(torchvision.datasets, self.name.upper())
-            if self.name=='cifar10':
-                dset = dset(self.data_dir, train=self.train, download=True)
-            elif self.name == 'STL10':
-                dset = dset(self.data_dir, split=('train' if self.train else 'test'), download=True)
-            elif self.name == 'SVHN':
-                dset = dset(self.data_dir, split=('train' if self.train else 'test'), download=True)
-            data, targets = dset.data, dset.targets
-        else: #MLCC에 대해
-            
-            trainset = torchvision.datasets.ImageFolder(root="./Train", transform=transform_train)
-            testset = torchvision.datasets.ImageFolder(root="./Test", transform=transform_test)
-            
-        return BasicDataset(data, targets, num_classes, transform, 
-                            use_strong_transform, strong_transform, onehot)
-    
+    # def get_sup_set(self, use_strong_transform=False,
+    #              strong_transform=None, onehot=False, train=True, train_idx = 1):
+    #     print("get_dset_params:", use_strong_transform, strong_transform, onehot)
+    #     data, targets = self.get_data()
+    #     num_classes = self.num_classes
+    #     transform = self.transform
+    #     data_dir = self.data_dir
+    #
+    #     if hasattr(torchvision.datasets, self.name.upper()):
+    #         dset = getattr(torchvision.datasets, self.name.upper())
+    #         if self.name=='cifar10' or self.name=='cifar100':
+    #             dset = dset(self.data_dir, train=self.train, download=True)
+    #         elif self.name == 'STL10':
+    #             dset = dset(self.data_dir, split=('train' if self.train else 'test'), download=True)
+    #         elif self.name == 'SVHN':
+    #             dset = dset(self.data_dir, split=('train' if self.train else 'test'), download=True)
+    #         data, targets = dset.data, dset.targets
+    #     else: #MLCC에 대해
+    #
+    #         trainset = torchvision.datasets.ImageFolder(root="./Train", transform=transform_train)
+    #         testset = torchvision.datasets.ImageFolder(root="./Test", transform=transform_test)
+    #
+    #     return BasicDataset(data, targets, num_classes, transform,
+    #                         use_strong_transform, strong_transform, onehot)
+    #
     
     def get_ssl_dset(self, num_labels, index=None, include_lb_to_ulb=True,
                             use_strong_transform=True, strong_transform=None, 

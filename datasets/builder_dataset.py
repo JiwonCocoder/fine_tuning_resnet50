@@ -22,7 +22,7 @@ def build_dataset(args):
         if hasattr(torchvision.datasets, args.dataset.upper()):
             dset = getattr(torchvision.datasets, args.dataset.upper()) #여기
             
-            if args.dataset =='cifar10':
+            if args.dataset =='cifar10' or args.dataset == 'cifar100':
                 train_dset = dset(args.data_dir, train=True, download=True, transform=get_transform(args.dataset, args.learning_type, train=True))
                 eval_dset = dset(args.data_dir, train=False, download=True, transform=get_transform(args.dataset, args.learning_type, train=False))
             elif args.dataset == 'STL10' or args.dataset == 'SVHN':

@@ -14,19 +14,28 @@ rm -r ./saved_models
 # python train.py --batch_size 128 --world-size 1 --rank 0 --save_name sup --data_dir ./data --dataset SVHN --num_classes 10 --lr 0.0002 --net wide_resnet50_2 --net_from_name True --eval_batch_size 10 --gpu 0\
 #  --pretrained_from scratch --pretrained_model_dir pretrained_model --learning_type sup --baseline supervised --mixup 1
 
- python train.py  --num_train_iter 1000 --num_labels 4000 --batch_size 128 --eval_batch_size 100 \
+python train.py  --num_train_iter 1000 --batch_size 4 --eval_batch_size 10 \
                  --lr 0.002 \
-                 --learning_type semi --baseline Fixmatch --net wide_resnet50_2 --net_from_name True \
+                 --learning_type sup --baseline supervised --net wide_resnet50_2 --net_from_name True \
                  --pretrained_from ImageNet_supervised --mixup 0 \
-                 --data_dir ./data --dataset cifar10 --train_sampler RandomSampler --num_classes 10 \
+                 --data_dir ./data --dataset cifar100 --train_sampler RandomSampler --num_classes 100 \
                  --world-size 1 --rank 0 --gpu 0
+#
+# python train.py  --num_train_iter 1000 --num_labels 4000 --batch_size 128 --eval_batch_size 100 \
+#                 --lr 0.002 \
+#                 --learning_type semi --baseline Fixmatch --net wide_resnet50_2 --net_from_name True \
+#                 --pretrained_from ImageNet_supervised --mixup 0 \
+#                 --data_dir ./data --dataset cifar10 --train_sampler RandomSampler --num_classes 10 \
+#                 --world-size 1 --rank 0 --gpu 0
+#
+# python train.py  --num_train_iter 1000 --batch_size 128 --eval_batch_size 100 \
+#                 --lr 0.002 \
+#                 --learning_type sup --baseline supervised --net wide_resnet50_2 --net_from_name True \
+#                 --pretrained_from ImageNet_supervised --mixup 0 \
+#                 --data_dir ./data --dataset cifar10 --train_sampler RandomSampler --num_classes 10 \
+#                 --world-size 1 --rank 0 --gpu 0
+#
 
- python train.py  --num_train_iter 1000 --batch_size 128 --eval_batch_size 100 \
-                 --lr 0.002 \
-                 --learning_type sup --baseline Fixmatch --net wide_resnet50_2 --net_from_name True \
-                 --pretrained_from ImageNet_supervised --mixup 0 \
-                 --data_dir ./data --dataset cifar10 --train_sampler RandomSampler --num_classes 10 \
-                 --world-size 1 --rank 0 --gpu 0
 
 
 #--num_train_iter 1000 --num_labels 4000 --batch_size 128 --eval_batch_size 100 --lr 0.002 --learning_type semi --baseline Fixmatch --net wide_resnet50_2 --net_from_name True --pretrained_from ImageNet_supervised --mixup 0 --data_dir ./data --dataset cifar10 --train_sampler RandomSampler --num_classes 10 --world-size 1 --rank 0 --gpu 0

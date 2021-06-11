@@ -84,9 +84,9 @@ class KD_distill_unsup:
         # create the encoders
         # network is builded only by num_classes,
         
-        self.teacher_model = choose_network(args.net_from_name, args.student_net)
-        self.train_model = choose_network(args.net_from_name, args.student_net, args.pretrained_from, args.pretrained_model_dir)
-        self.eval_model = choose_network(args.net_from_name, args.student_net)
+        self.teacher_model = choose_network(args,args.net_from_name, args.student_net)
+        self.train_model = choose_network(args,args.net_from_name, args.student_net, args.pretrained_from, args.pretrained_model_dir)
+        self.eval_model = choose_network(args,args.net_from_name, args.student_net)
         self.tb_log = tb_log
 
         self.optimizer = None
@@ -324,10 +324,10 @@ class KD_distill_semi:
         # create the encoders
         # network is builded only by num_classes,
 
-        self.teacher_model = choose_network(args.net_from_name, args.student_net)
-        self.train_model = choose_network(args.net_from_name, args.student_net, args.pretrained_from,
+        self.teacher_model = choose_network(args,args.net_from_name, args.student_net)
+        self.train_model = choose_network(args,args.net_from_name, args.student_net, args.pretrained_from,
                                           args.pretrained_model_dir)
-        self.eval_model = choose_network(args.net_from_name, args.student_net)
+        self.eval_model = choose_network(args,args.net_from_name, args.student_net)
         self.tb_log = tb_log
 
         self.optimizer = None
