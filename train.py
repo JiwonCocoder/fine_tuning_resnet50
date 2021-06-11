@@ -244,7 +244,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_labels', type=int, default=300)
     parser.add_argument('--batch_size', type=int, default=4,
                         help='total number of batch size of labeled data')
-    parser.add_argument('--uratio', type=int, default=1,
+    parser.add_argument('--uratio', type=int, default=7,
                         help='the ratio of unlabeled data to labeld data in each mini-batch')
     parser.add_argument('--eval_batch_size', type=int, default=2,
                         help='batch size of evaluation data loader (it does not affect the accuracy)')
@@ -258,7 +258,7 @@ if __name__ == "__main__":
     '''
     Optimizer configurations
     '''
-    parser.add_argument('--lr', type=float, default=0.03)
+    parser.add_argument('--lr', type=float, default=0.002)
     parser.add_argument('--momentum', type=float, default=0.9)
     parser.add_argument('--weight_decay', type=float, default=5e-4)
     parser.add_argument('--amp', action='store_true', help='use mixed precision training or not')
@@ -284,6 +284,8 @@ if __name__ == "__main__":
                         help='pretrained_model_dir')
     parser.add_argument('--fine_tuning', type=str, default=None,
                         help='supervised | semi_supervised')
+    parser.add_argument('--mixup', default=0, type=int, help='wanna mix ? 1 == mixup | 0 == non mixup')
+
     '''
     for KD_distillation
     '''
@@ -330,7 +332,6 @@ if __name__ == "__main__":
                              'fastest way to use PyTorch for either single node or '
                              'multi node data parallel training')
 
-    parser.add_argument('--mixup', default=0, type=int, help='wanna mix ? 1 == mixup | 0 == non mixup')
 
     args = parser.parse_args()
     main(args)

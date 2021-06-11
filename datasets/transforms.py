@@ -31,20 +31,28 @@ def get_transform(name, learning_type, train):
         return transforms.Compose([transforms.ToTensor(),
                                    transforms.Normalize(mean[name], std[name])])
     elif train:
-        if learning_type == 'semi':
-            data_transforms = transforms.Compose([
-                transforms.RandomHorizontalFlip(p=0.5),
-                transforms.RandomVerticalFlip(p=0.5),
-                transforms.ToTensor(),
-                transforms.Normalize(mean[name], std[name])
-            ])
-            return data_transforms
-        elif learning_type == 'sup':
-            data_transforms= transforms.Compose([
+        data_transforms = transforms.Compose([
                 transforms.RandomVerticalFlip(p=0.5),
                 transforms.RandomHorizontalFlip(p=0.5),
                 transforms.ToTensor(),
                 transforms.Normalize(mean[name], std[name])
             ])
-            return data_transforms
+    return data_transforms
+
+        # if learning_type == 'semi':
+        #     data_transforms = transforms.Compose([
+        #         transforms.RandomHorizontalFlip(p=0.5),
+        #         transforms.RandomVerticalFlip(p=0.5),
+        #         transforms.ToTensor(),
+        #         transforms.Normalize(mean[name], std[name])
+        #     ])
+        #     return data_transforms
+        # elif learning_type == 'sup':
+        #     data_transforms= transforms.Compose([
+        #         transforms.RandomVerticalFlip(p=0.5),
+        #         transforms.RandomHorizontalFlip(p=0.5),
+        #         transforms.ToTensor(),
+        #         transforms.Normalize(mean[name], std[name])
+        #     ])
+        #     return data_transforms
 

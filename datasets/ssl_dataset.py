@@ -107,7 +107,7 @@ class SSL_Dataset:
                 dset = dset(self.data_dir, train=self.train, download=True)
                 data, targets = dset.data, dset.targets
             elif self.name == 'STL10':
-                dset = dset(self.data_dir, split=('train+unlabeled' if self.train else 'test'), download=True)
+                dset = dset(self.data_dir, split=('train' if self.train else 'test'), download=True)
                 
                 data, targets = dset.data, dset.labels
             elif self.name == 'SVHN':

@@ -141,6 +141,7 @@ class FixMatch:
 
         # pdb.set_trace()
         for (x_lb, y_lb), (x_ulb_w, x_ulb_s, _) in zip(self.loader_dict['train_lb'], self.loader_dict['train_ulb']):
+            # y_lb=y_lb.to(dtype=torch.long)
             # HERE_mixup
             if args.mixup == 1:
                 mixed_x_lb, y_lb_a, y_lb_b, lam = self.mixup_data(x_lb, y_lb)
@@ -160,7 +161,8 @@ class FixMatch:
             assert num_ulb == x_ulb_s.shape[0]
             
             x_lb, x_ulb_w, x_ulb_s = x_lb.cuda(args.gpu), x_ulb_w.cuda(args.gpu), x_ulb_s.cuda(args.gpu)
-            
+            y_lb = y_lb.to(dtype=torch.long)
+
             ## HERE_mixup
             if args.mixup == 1:
                 y_lb_a = y_lb_a.cuda(args.gpu)

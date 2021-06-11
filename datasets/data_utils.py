@@ -60,6 +60,7 @@ def sample_labeled_data(data, target,
     lbs = []
     lb_idx = []
     # pdb.set_trace()
+
     for c in range(num_classes):
         idx = np.where(target == c)[0]
         # print(idx)
