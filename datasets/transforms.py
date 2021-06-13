@@ -28,15 +28,28 @@ std['STL10'] = [0.2241, 0.2215, 0.2239]
 
 def get_transform(name, learning_type, train):
     if not train:
-        return transforms.Compose([transforms.ToTensor(),
-                                   transforms.Normalize(mean[name], std[name])])
+        if name == 'MLCC':
+            return transforms.Compose([transforms.ToTensor(),
+                                       transforms.Normalize(mean[name], std[name])])
+        else:
+            return transforms.Compose([transforms.Resize(size=(224,224)),
+                                        transforms.ToTensor(), transforms.Normalize(mean[name], std[name])])
     elif train:
-        data_transforms = transforms.Compose([
-                transforms.RandomVerticalFlip(p=0.5),
-                transforms.RandomHorizontalFlip(p=0.5),
-                transforms.ToTensor(),
-                transforms.Normalize(mean[name], std[name])
-            ])
+        if name == 'MLCC':
+            data_transforms = transforms.Compose([
+                    transforms.RandomVerticalFlip(p=0.5),
+                    transforms.RandomHorizontalFlip(p=0.5),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean[name], std[name])
+                ])
+        else:
+            data_transforms = transforms.Compose([
+                    transforms.Resize(size=(224,224))
+                    transforms.RandomVerticalFlip(p=0.5),
+                    transforms.RandomHorizontalFlip(p=0.5),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean[name], std[name])
+                ])
     return data_transforms
 
         # if learning_type == 'semi':
