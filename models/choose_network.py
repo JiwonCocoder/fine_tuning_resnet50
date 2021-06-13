@@ -32,21 +32,31 @@ def choose_network(args, net_from_name,
                 model.fc = nn.Linear(model.fc.in_features, args.num_classes)
             elif "SimCLR" in pretrained_from:# CAUTION : 와이드레즈넷일때 따로 추가해줘야함.
                 model = models.resnet50(pretrained=False, num_classes=args.num_classes)
-                dataset = pretrained_from.split('_')[0]
-                checkpoint_dir = os.path.join(pretrained_model_dir, dataset)
-                checkpoint_file = os.path.join(checkpoint_dir,pretrained_from + ".pth.tar")
+                model.fc = nn.Linear(model.fc.in_features, args.num_classes)
+                for name, param in model.named_parameters():
+                    if param.requires_grad:
+                        print(name)
+                model_name_from_path = os.path.join(pretrained_model_dir, net.lower())
+                prefrained_from_path = pretrained_from.lower().replace("_", "/")
+                checkpoint_dir = os.path.join(model_name_from_path, prefrained_from_path)
+                checkpoint_file = os.path.join(checkpoint_dir,pretrained_from + ".pth")
+                print("checkpoint_file_path:", checkpoint_file)
                 checkpoint = torch.load(checkpoint_file)
                 state_dict = checkpoint['state_dict']
+                # for k in list(state_dict.keys()):
+                #     if k.startswith('backbone.'):
+                #         if k.startswith('backbone') and not k.startswith('backbone.fc'):
+                #             # remove prefix
+                #             state_dict[k[len("backbone."):]] = state_dict[k]
+                #             if k == 'backbone.conv1.weight':
+                #                 print("here")
+                #                 print(state_dict[k])
+                #     del state_dict[k]
                 for k in list(state_dict.keys()):
-                    if k.startswith('backbone.'):
-                        if k.startswith('backbone') and not k.startswith('backbone.fc'):
-                            # remove prefix
-                            state_dict[k[len("backbone."):]] = state_dict[k]
-                            if k == 'backbone.conv1.weight':
-                                print("here")
-                                print(state_dict[k])
-                    del state_dict[k]
+                    if k.startswith('fc'):
+                        del state_dict[k]
                 log = model.load_state_dict(state_dict, strict=False)
+                print(log.missing_keys)
                 assert log.missing_keys == ['fc.weight', 'fc.bias']
             return model
     else: # if net_from_name == false 인 경우

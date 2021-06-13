@@ -75,6 +75,8 @@ def main(args):
     #                             world_size=args.world_size, rank=args.rank)
 
     # SET save_path and logger
+    if args.save_name is None:
+        args.save_name = f'{args.pretrained_from}_{args.dataset}_{args.net}'
     save_path = os.path.join(args.save_dir, args.save_name)
     if os.path.exists(save_path) and not args.overwrite:
         raise Exception('already existing model: {}'.format(save_path))
@@ -227,7 +229,7 @@ if __name__ == "__main__":
     '''
     parser.add_argument('--work_dir', type=str, default='./log')
     parser.add_argument('--save_dir', type=str, default='./saved_models')
-    parser.add_argument('--save_name', type=str, default='fixmatch')
+    parser.add_argument('--save_name', type=str, default=None)
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--load_path', type=str, default=None)
     parser.add_argument('--overwrite', action='store_true')
