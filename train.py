@@ -21,7 +21,7 @@ from datasets.builder_dataset import build_dataset, build_dataloader
 
 from utils import get_logger
 from train_utils import TBLog, get_SGD, get_cosine_schedule_with_warmup
-
+from torch.optim.lr_scheduler import StepLR
 
 def set_random_seed(seed, deterministic=False):
     """Set random seed.
@@ -161,9 +161,23 @@ def main_worker(gpu, ngpus_per_node, args):
     # SET Optimizer & LR Scheduler
     ## construct SGD and cosine lr scheduler
     optimizer = get_SGD(model.train_model, 'SGD', args.lr, args.momentum, args.weight_decay)
-    scheduler = get_cosine_schedule_with_warmup(optimizer,
-                                                args.num_train_iter,
-                                                num_warmup_steps=args.num_train_iter*0)
+    if args.scheduler_type == 'step':
+        scheduler = StepLR(optimizer, step_size=50, gamma=0.5)
+    elif args.scheduler_type == 'cosine':
+        scheduler = get_cosine_schedule_with_warmup(optimizer,
+                                                    args.num_train_iter,
+                                                    num_warmup_steps=args.num_train_iter*0)
+    print("=======================")
+    print(f'momentum:{args.momentum} \n'
+          f'weigiht_deacy:{args.weight_decay} \n'
+          f'scheduler_type:{args.scheduler_type} \n'
+          f'step_size:50 \n'
+          f'gamma: 0.5 \n'
+          )
+    print("=======================")
+
+
+
     ## set SGD and cosine lr on FixMatch
     model.set_optimizer(optimizer, scheduler)
     # SET Devices for (Distributed) DataParallel
@@ -260,6 +274,7 @@ if __name__ == "__main__":
     '''
     Optimizer configurations
     '''
+    parser.add_argument('--scheduler_type', type=str, default=None, help= 'cosine|step')
     parser.add_argument('--lr', type=float, default=0.002)
     parser.add_argument('--momentum', type=float, default=0.9)
     parser.add_argument('--weight_decay', type=float, default=5e-4)

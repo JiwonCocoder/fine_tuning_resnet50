@@ -62,7 +62,6 @@ def get_SGD(net, name='SGD', lr=0.1, momentum=0.9, \
     weight decay regularization on parameters in batch normalization.
     '''
     optim = getattr(torch.optim, name)
-    
     decay = []
     no_decay = []
     for name, param in net.named_parameters():
@@ -104,6 +103,10 @@ def get_cosine_schedule_with_warmup(optimizer,
         return _lr
     
     return LambdaLR(optimizer, _lr_lambda, last_epoch)
+#
+# def steplr(weofjweoi, dividesteps ):
+#     for i in range(0, endepoch):
+#         if i %
 
 
 def accuracy(output, target, topk=(1,)):

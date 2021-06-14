@@ -8,15 +8,15 @@
 #for KD
 
 #Cifar10 / supervised /scratch 
-python train.py --epoch 10000 --batch_size 16 --eval_batch_size 10 --num_eval_iter 100\
-                --lr 0.002 \
-                --learning_type sup --baseline supervised --net resnet50 --net_from_name True \
-                --pretrained_from scratch --mixup 0 \
-                --data_dir ./data --dataset cifar10 --num_classes 10 \
-                --world-size 1 --rank 0 --gpu 0 
+#python train.py --epoch 10000 --batch_size 16 --eval_batch_size 10 --num_eval_iter 100\
+#                --lr 0.002 \
+#                --learning_type sup --baseline supervised --net resnet50 --net_from_name True \
+#                --pretrained_from scratch --mixup 0 \
+#                --data_dir ./data --dataset cifar10 --num_classes 10 \
+#                --world-size 1 --rank 0 --gpu 0
 
 #MLCC / supervised /scratch 
-python train.py --epoch 10000 --batch_size 16 --eval_batch_size 10 --num_eval_iter 100\
+python train.py --epoch 200 --batch_size 64 --eval_batch_size 1000 --num_eval_iter 100\
                 --lr 0.002 \
                 --learning_type sup --baseline supervised --net resnet50 --net_from_name True \
                 --pretrained_from scratch --mixup 0 \
