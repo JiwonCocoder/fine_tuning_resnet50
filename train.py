@@ -76,7 +76,7 @@ def main(args):
 
     # SET save_path and logger
     if args.save_name is None:
-        args.save_name = f'{args.pretrained_from}_{args.dataset}_{args.net}'
+        args.save_name = f'{args.baseline}_{args.pretrained_from}_{args.dataset}_{args.net}'
     save_path = os.path.join(args.save_dir, args.save_name)
     if os.path.exists(save_path) and not args.overwrite:
         raise Exception('already existing model: {}'.format(save_path))
@@ -281,7 +281,7 @@ if __name__ == "__main__":
     pretrained_model Configurations
     '''
     parser.add_argument('--pretrained_from', type=str, default='scratch',
-                        help='scratch | ImageNet_supervised | ImageNet_SimCLR | CIFAR_SimCLR | MLCC_SimCLR')
+                        help='scratch | ImageNet_supervised | ImageNet_SimCLR | CIFAR10_SimCLR | MLCC_SimCLR')
     parser.add_argument('--pretrained_model_dir', type=str, default='pretrained_model',
                         help='pretrained_model_dir')
     parser.add_argument('--fine_tuning', type=str, default=None,
