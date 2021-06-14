@@ -74,7 +74,7 @@ class KD_distill_unsup:
             logger: logger (see utils_from_git.py)
         """
 
-        super(KD_distill, self).__init__()
+        super(KD_distill_unsup, self).__init__()
 
         # momentum update param
         self.loader = {}

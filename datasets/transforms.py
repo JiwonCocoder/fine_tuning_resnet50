@@ -44,7 +44,7 @@ def get_transform(name, learning_type, train):
                 ])
         else:
             data_transforms = transforms.Compose([
-                    transforms.Resize(size=(224,224))
+                    transforms.Resize(size=(224,224)),
                     transforms.RandomVerticalFlip(p=0.5),
                     transforms.RandomHorizontalFlip(p=0.5),
                     transforms.ToTensor(),

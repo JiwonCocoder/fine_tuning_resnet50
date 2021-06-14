@@ -8,6 +8,15 @@
 #for KD
 rm -r ./saved_models
 
+#MLCC / KD_distill /supervised_imageNet_finetuning
+python train.py --num_train_iter 20000 -num_eval_iter 100 --num_labels 300 --batch_size 2 --eval_batch_size 10 \
+                 --lr 0.002 \
+                 --learning_type semi --baseline KD_distill --student_net resnet50 --net_from_name True --temperature 0.01 --alpha 0.35\
+                 --teacher_net resnet50 --pretrained_from ImageNet_supervised --mixup 0 \
+                 --data_dir ./data --dataset cifar10 --train_sampler RandomSampler --num_classes 10 \
+                 --world-size 1 --rank 0 --gpu 0
+
+
 #MLCC / Fixmatch /supervised_imageNet_finetuning
 python train.py --num_train_iter 20000 --num_labels 300 --batch_size 64 --eval_batch_size 10 \
                  --lr 0.002 \
