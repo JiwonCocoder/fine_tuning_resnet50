@@ -2,6 +2,9 @@ import torch.nn as nn
 import pdb
 import os
 import torch
+from pl_bolts.models.self_supervised import SimCLR
+from torchsummary import summary
+
 def choose_network(args, net_from_name,
                    net,
                    pretrained_from='scratch',
@@ -39,25 +42,39 @@ def choose_network(args, net_from_name,
                 model_name_from_path = os.path.join(pretrained_model_dir, net.lower())
                 prefrained_from_path = pretrained_from.lower().replace("_", "/")
                 checkpoint_dir = os.path.join(model_name_from_path, prefrained_from_path)
+
                 checkpoint_file = os.path.join(checkpoint_dir,pretrained_from + ".pth")
-                print("checkpoint_file_path:", checkpoint_file)
-                checkpoint = torch.load(checkpoint_file)
-                state_dict = checkpoint['state_dict']
-                # for k in list(state_dict.keys()):
-                #     if k.startswith('backbone.'):
-                #         if k.startswith('backbone') and not k.startswith('backbone.fc'):
-                #             # remove prefix
-                #             state_dict[k[len("backbone."):]] = state_dict[k]
-                #             if k == 'backbone.conv1.weight':
-                #                 print("here")
-                #                 print(state_dict[k])
-                #     del state_dict[k]
-                for k in list(state_dict.keys()):
-                    if k.startswith('fc'):
-                        del state_dict[k]
-                log = model.load_state_dict(state_dict, strict=False)
-                print(log.missing_keys)
-                assert log.missing_keys == ['fc.weight', 'fc.bias']
+                if os.path.isfile(checkpoint_file):
+                    print("checkpoint_file_path:", checkpoint_file)
+                    checkpoint = torch.load(checkpoint_file)
+                    state_dict = checkpoint['state_dict']
+                    # for k in list(state_dict.keys()):
+                    #     if k.startswith('backbone.'):
+                    #         if k.startswith('backbone') and not k.startswith('backbone.fc'):
+                    #             # remove prefix
+                    #             state_dict[k[len("backbone."):]] = state_dict[k]
+                    #             if k == 'backbone.conv1.weight':
+                    #                 print("here")
+                    #                 print(state_dict[k])
+                    #     del state_dict[k]
+                    for k in list(state_dict.keys()):
+                        if k.startswith('fc'):
+                            del state_dict[k]
+                    log = model.load_state_dict(state_dict, strict=False)
+                    print(log.missing_keys)
+                    assert log.missing_keys == ['fc.weight', 'fc.bias']
+
+                else:
+                    checkpoint_file = os.path.join(checkpoint_dir, pretrained_from + '.ckpt')
+                    assert os.path.isfile(checkpoint_file) == True
+                    simclr = SimCLR.load_from_checkpoint(checkpoint_file, strict=False)
+                    simclr_resnet50 = simclr.encoder
+                    simclr_resnet50_wo_fc = torch.nn.Sequential(*(list(simclr_resnet50.children())[:-1]))
+                    print(summary(simclr_resnet50.cuda(), (3, 128, 200)))
+                    print(summary(model.cuda(), (3, 128, 200)))
+                    for param_q, param_k in zip(simclr_resnet50_wo_fc.parameters(), model.parameters()):
+                        param_k.data.copy_(param_q.detach().data)  # initialize
+
             return model
     else: # if net_from_name == false 인 경우
         # 여기도 if 문으로 프리트레인 조건 넣어줘야함. 그러나 net from name 을 항상 true 로 두면 그럴 필요 없음
