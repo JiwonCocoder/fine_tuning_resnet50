@@ -415,7 +415,7 @@ class KD_distill_semi:
 
             student_input = torch.cat((x_lb, x_ulb))
             with torch.no_grad():
-                output_teacher_batch = self.teacher_model(x_lb)
+                output_teacher_batch = self.teacher_model(x_ulb)
 
             output_batch = self.train_model(student_input)
             if args.gpu is not None:

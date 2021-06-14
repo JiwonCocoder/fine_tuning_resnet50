@@ -53,12 +53,14 @@ class SupervisedModel:
         self.lambda_u = lambda_u
         self.tb_log = tb_log
         self.use_hard_label = hard_label
-        
+
         self.optimizer = None
         self.scheduler = None
         
         self.it = 0
-        
+        self.best_eval_acc = 0
+        self.best_it = 0.0
+
         self.logger = logger
         self.print_fn = print if logger is None else logger.info
         # self.pretrained_train_model = models.resnet50(pretrained=True)
@@ -70,6 +72,8 @@ class SupervisedModel:
             param_k.requires_grad = False  # not update by gradient for eval_net
             
         self.eval_model.eval()
+        self.train_model.train()
+
             
             
     @torch.no_grad()
@@ -124,8 +128,7 @@ class SupervisedModel:
         ngpus_per_node = torch.cuda.device_count()
 
         #lb: labeled, ulb: unlabeled
-        self.train_model.train()
-        
+
         # for gpu profiling
         start_batch = torch.cuda.Event(enable_timing=True)
         end_batch = torch.cuda.Event(enable_timing=True)
@@ -133,8 +136,7 @@ class SupervisedModel:
         end_run = torch.cuda.Event(enable_timing=True)
         
         start_batch.record()
-        best_eval_acc, best_it = 0.0, 0
-        
+
         scaler = GradScaler()
         amp_cm = autocast if args.amp else contextlib.nullcontext
         ##################################################################
@@ -145,8 +147,8 @@ class SupervisedModel:
                 x_lb = mixed_x_lb
             ## Up to Here
 
-            if self.it > args.num_train_iter:
-                break
+            # if self.it > args.num_train_iter:
+            #     break
             end_batch.record()
             torch.cuda.synchronize()
             start_run.record()
@@ -211,16 +213,16 @@ class SupervisedModel:
                 
                 save_path = os.path.join(args.save_dir, args.save_name)
                 
-                if tb_dict['eval/top-1-acc'] > best_eval_acc:
-                    best_eval_acc = tb_dict['eval/top-1-acc']
-                    best_it = self.it
+                if tb_dict['eval/top-1-acc'] > self.best_eval_acc:
+                    self.best_eval_acc = tb_dict['eval/top-1-acc']
+                    self.best_it = self.it
                 
-                self.print_fn(f"{self.it} iteration, USE_EMA: {hasattr(self, 'eval_model')}, {tb_dict}, BEST_EVAL_ACC: {best_eval_acc}, at {best_it} iters")
+                self.print_fn(f"{self.it} iteration, USE_EMA: {hasattr(self, 'eval_model')}, {tb_dict}, BEST_EVAL_ACC: {self.best_eval_acc}, at {self.best_it} iters")
             
             if not args.multiprocessing_distributed or \
                     (args.multiprocessing_distributed and args.rank % ngpus_per_node == 0):
                 
-                if self.it == best_it:
+                if self.it == self.best_it:
                     self.save_model('model_best.pth', save_path)
                 
                 if not self.tb_log is None:
@@ -233,7 +235,7 @@ class SupervisedModel:
                 self.num_eval_iter = 1000
         
         eval_dict = self.evaluate(args=args)
-        eval_dict.update({'eval/best_acc': best_eval_acc, 'eval/best_it': best_it})
+        eval_dict.update({'eval/best_acc': self.best_eval_acc, 'eval/best_it': self.best_it})
         return eval_dict
             
         ##################################################################

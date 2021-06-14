@@ -33,6 +33,7 @@ python train.py --num_train_iter 20000 --num_labels 300 --batch_size 64 --eval_b
 #                 --pretrained_from ImageNet_supervised --mixup 0 \
 #                 --data_dir ./data --dataset cifar10 --train_sampler RandomSampler --num_classes 10 \
 #                 --world-size 1 --rank 0 --gpu 0
+
 ##CIFAR10 / Fixmatch / simclr_imageNet finetuning
 #python train.py --num_train_iter 20000 --num_labels 4000 --batch_size 64 --eval_batch_size 10 \
 #                 --lr 0.002 \
